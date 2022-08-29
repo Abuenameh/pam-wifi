@@ -80,7 +80,7 @@ inline std::string tolower(std::string s)
 auto check(pam_handle_t *pamh, int flags, int argc, const char **argv,
            bool auth_tok) -> int
 {
-  INIReader config("/lib64/security/wifi/config.ini");
+  INIReader config("/lib64/security/pam-wifi/config.ini");
   openlog("pam_wifi", 0, LOG_AUTHPRIV);
 
   // Error out if we could not read the config file
