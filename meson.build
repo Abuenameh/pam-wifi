@@ -1,4 +1,4 @@
-project('pam-wifi', 'cpp', version: '0.1.0', default_options: ['cpp_std=c++14'])
+project('pam_wifi', 'cpp', version: '0.1.0', default_options: ['cpp_std=c++14'])
 
 inih_cpp = dependency('INIReader', fallback: ['inih', 'INIReader_dep'])
 libpam = meson.get_compiler('cpp').find_library('pam')
