@@ -7,5 +7,6 @@ shared_library(
 	'main.cpp',
 	dependencies: [
 		libpam,
-	]
+	],
+	name_prefix: ''
 )
