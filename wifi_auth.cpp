@@ -81,6 +81,8 @@ std::size_t remove_all(std::string& inout, std::string what) {
 
 int main(int argc, char *argv[])
 {
+  setuid(0);
+
   INIReader config("/lib64/security/wifi/config.ini");
   openlog("wifi-auth", 0, LOG_AUTHPRIV);
 
@@ -92,11 +94,11 @@ int main(int argc, char *argv[])
     exit(10);
   }
 
-  std::string raw_bssids = config.GetString("authorized", "bssids", "");
-  std::vector<std::string> bssids = split(raw_bssids, "\n");
+  std::string raw_bssids = tolower(config.GetString("authorized", "bssids", ""));
+  std::vector<std::string> auth_bssids = split(raw_bssids, "\n");
 
   std::ostringstream oss;
-  Process bssid_proc("nmcli -g bssid device wifi list", "", [&](const char *bytes, size_t n)
+  Process bssid_proc("nmcli -g bssid device wifi list --rescan no", "", [&](const char *bytes, size_t n)
                      { oss << std::string{bytes, n}; });
 
   // Start the subprocess
@@ -108,18 +110,18 @@ int main(int argc, char *argv[])
     exit(11);
   }
 
-  std::string bssid = oss.str();
+  std::string bssid = tolower(oss.str());
   if (bssid.empty())
   {
     syslog(LOG_INFO, "Not connected to Wi-Fi network");
     exit(12);
   }
-  bssid = split(bssid, "\n")[0];
   replace_all(bssid, "\\:", ":");
+  std::vector<std::string> bssids = split(bssid, "\n");
 
-  for (auto &auth_bssid : bssids)
+  for (auto &auth_bssid : auth_bssids)
   {
-    if (tolower(bssid) == tolower(auth_bssid))
+    if (std::find(bssids.begin(), bssids.end(), auth_bssid) != bssids.end())
     {
       exit(0);
     }
