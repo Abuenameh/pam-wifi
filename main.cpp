@@ -151,6 +151,7 @@ auto check(pam_handle_t *pamh, int flags, int argc, const char **argv,
     syslog(LOG_INFO, "Not connected to Wi-Fi network");
     return PAM_IGNORE;
   }
+  bssid = split(bssid, "\n")[0];
   replace_all(bssid, "\\:", ":");
 
   for (auto &auth_bssid : bssids)
