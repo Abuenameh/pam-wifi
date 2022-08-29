@@ -68,6 +68,21 @@ std::string tolower(std::string s)
   return s;
 }
 
+std::size_t replace_all(std::string& inout, std::string what, std::string with)
+{
+    std::size_t count{};
+    for (std::string::size_type pos{};
+         inout.npos != (pos = inout.find(what.data(), pos, what.length()));
+         pos += with.length(), ++count) {
+        inout.replace(pos, what.length(), with.data(), with.length());
+    }
+    return count;
+}
+ 
+std::size_t remove_all(std::string& inout, std::string what) {
+    return replace_all(inout, what, "");
+}
+
 /**
  * The main function, runs the identification and authentication
  * @param  pamh     The handle to interface directly with PAM
@@ -91,8 +106,7 @@ auto check(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return PAM_IGNORE;
   }
 
-  std::string iface = config.GetString("core", "interface", "wlan0");
-  std::string raw_bssids = config.GetString("core", "bssids", "");
+  std::string raw_bssids = config.GetString("authorized", "bssids", "");
   std::vector<std::string> bssids = split(raw_bssids, "\n");
 
   // Will contain the responses from PAM functions
@@ -119,7 +133,7 @@ auto check(pam_handle_t *pamh, int flags, int argc, const char **argv,
   }
 
   std::ostringstream oss;
-  Process bssid_proc("iw " + iface + " link", "", [&](const char *bytes, size_t n)
+  Process bssid_proc("nmcli -g bssid device wifi list", "", [&](const char *bytes, size_t n)
                      { oss << std::string{bytes, n}; });
 
   // Start the subprocess
@@ -131,25 +145,19 @@ auto check(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return PAM_IGNORE;
   }
 
-  std::string out = split(oss.str(), "\n")[0];
-  std::regex bssid_pattern("[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]");
-  std::smatch bssid_match;
-  std::string bssid;
-  if (std::regex_search(out, bssid_match, bssid_pattern))
+  std::string bssid = oss.str();
+  if (bssid.empty())
   {
-    bssid = bssid_match[0];
-  }
-  else
-  {
-    syslog(LOG_ERR, "Unable to parse BSSID: %s", out.c_str());
+    syslog(LOG_INFO, "Not connected to Wi-Fi network");
     return PAM_IGNORE;
   }
+  replace_all(bssid, "\\:", ":");
 
   for (auto &auth_bssid : bssids)
   {
     if (tolower(bssid) == tolower(auth_bssid))
     {
-      syslog(LOG_INFO, "Authorized WiFi network found");
+      syslog(LOG_INFO, "Authorized Wi-Fi network found");
 
       return PAM_SUCCESS;
     }
