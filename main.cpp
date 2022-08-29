@@ -44,7 +44,7 @@
 
 using namespace TinyProcessLib;
 
-inline std::vector<std::string> split(const std::string &text, const std::string &delims)
+std::vector<std::string> split(const std::string &text, const std::string &delims)
 {
   std::vector<std::string> tokens;
   std::size_t start = text.find_first_not_of(delims), end = 0;
@@ -60,7 +60,7 @@ inline std::vector<std::string> split(const std::string &text, const std::string
   return tokens;
 }
 
-inline std::string tolower(std::string s)
+std::string tolower(std::string s)
 {
   std::transform(s.begin(), s.end(), s.begin(),
                  [](unsigned char c)
