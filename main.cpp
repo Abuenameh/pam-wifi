@@ -137,7 +137,7 @@ auto check(pam_handle_t *pamh, int flags, int argc, const char **argv,
   std::string bssid;
   if (std::regex_search(out, bssid_match, bssid_pattern))
   {
-    bssid = bssid_match[1];
+    bssid = bssid_match[0];
   }
   else
   {
